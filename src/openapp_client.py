@@ -25,17 +25,14 @@ import sys
 
 import openappwrapper_pb2
 import openappwrapper_pb2_grpc
+import openapp_common
 
-DEBUG_CHANNEL = 'localhost:50051'
-REAL_CHANNEL = '73.231.57.242:9100'
-
-channel = REAL_CHANNEL
 
 def run(mode, command):
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    with grpc.insecure_channel(REAL_CHANNEL) as channel:
+    with grpc.insecure_channel(openapp_common.CLIENT_USED_CHANNEL) as channel:
         stub = openappwrapper_pb2_grpc.OpenerStub(channel)
         response = stub.Open(openappwrapper_pb2.CommandRequest(command=command, mode=mode))
     print(response.message)

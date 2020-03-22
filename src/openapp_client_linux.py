@@ -25,21 +25,16 @@ import sys
 
 import openappwrapper_pb2
 import openappwrapper_pb2_grpc
-
-DEBUG_CHANNEL = 'localhost:50051'
-REAL_CHANNEL = '73.231.57.242:9100'
-USER = 'hanxiaoh_corp'
-
-channel = REAL_CHANNEL
+import openapp_common
 
 def run(mode, command):
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
     try:
-        with grpc.insecure_channel(channel) as ch:
+        with grpc.insecure_channel(openapp_common.SERVER_USED_CHANNEL) as ch:
             stub = openappwrapper_pb2_grpc.OpenerStub(ch)
-            response = stub.Open(openappwrapper_pb2.CommandRequest(command=command, mode=mode, user=USER))
+            response = stub.Open(openappwrapper_pb2.CommandRequest(command=command, mode=mode, user=openapp_common.USER))
         print(response.message)
     except KeyboardInterrupt:
         logging.warning('User Exit...')

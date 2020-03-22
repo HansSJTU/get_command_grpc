@@ -29,12 +29,7 @@ import pyperclip
 
 import openappwrapper_pb2
 import openappwrapper_pb2_grpc
-
-DEBUG_CHANNEL = 'localhost:50051'
-REAL_CHANNEL = '178.128.209.12:9100'
-MACHINE_ID = 'hanxiaoh_corp'
-
-channel = REAL_CHANNEL
+import openapp_common
 
 """
 def run(mode, command):
@@ -51,9 +46,9 @@ def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    with grpc.insecure_channel(channel) as ch:
+    with grpc.insecure_channel(openapp_common.SERVER_USED_CHANNEL) as ch:
         stub = openappwrapper_pb2_grpc.OpenerStub(ch)
-        result_generator = stub.ListenForContent(openappwrapper_pb2.Id(machine_name=MACHINE_ID))
+        result_generator = stub.ListenForContent(openappwrapper_pb2.Id(machine_name=openapp_common.USER))
         def close_ch(signalNumber, frame):
             print('Receive Terminating...')
             result_generator.cancel()

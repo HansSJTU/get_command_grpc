@@ -8,6 +8,5 @@
 
 # https://grpc.io/docs/quickstart/python/
 
-python -m pip3 install --upgrade pip --user
-python -m pip3 install grpcio --user
-python -m pip3 install grpcio-tools --user
+pip3 install grpcio --user
+pip3 install grpcio-tools --user
