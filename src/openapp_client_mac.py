@@ -52,11 +52,12 @@ def run():
         def close_ch(signalNumber, frame):
             print('Receive Terminating...')
             result_generator.cancel()
+            ch.close()
             sys.exit(0)
         signal.signal(signal.SIGINT, close_ch)
         for command in result_generator:
             if command.mode == 'open':
-                command = "open " + command.command
+                command = "open \"" + command.command + "\""
                 os.system(command)
                 message = '[Done]: ' + command
             elif command.mode == 'copy':
