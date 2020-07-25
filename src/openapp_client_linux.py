@@ -32,7 +32,7 @@ def run(mode, command):
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
     try:
-        with grpc.insecure_channel(openapp_common.SERVER_USED_CHANNEL) as ch:
+        with grpc.insecure_channel(openapp_common.CLIENT_USED_CHANNEL) as ch:
             stub = openappwrapper_pb2_grpc.OpenerStub(ch)
             response = stub.Open(openappwrapper_pb2.CommandRequest(command=command, mode=mode, user=openapp_common.USER))
         print(response.message)
