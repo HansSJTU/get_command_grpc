@@ -22,6 +22,7 @@ from collections import deque, defaultdict
 import time
 import logging
 import os
+from threading import Thread, Lock
 
 import grpc
 
@@ -31,9 +32,15 @@ import openapp_common
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
+FORMAT = '%(asctime)-15s %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger(__name__)
+
 class Opener(openappwrapper_pb2_grpc.OpenerServicer):
     def __init__(self):
         self.command_queue = defaultdict(deque)
+        self.connection_status = {}
+        self.mutex = Lock()
 
     """
     # Direct Connect Mode.
@@ -49,28 +56,51 @@ class Opener(openappwrapper_pb2_grpc.OpenerServicer):
         else:
             message = '[Failed]: ' + request.mode + ' ' + request.command
         message = message.replace('\n', '\ n')
-        logging.warning(message)
+        logger.warning(message)
         return openappwrapper_pb2.DebugReply(message=message)
     """
 
     def Open(self, request, context):
-        print('Command Received: {com}'.format(com=str(request)))
+        logger.warning('Command Received: {com}'.format(com=str(request)))
+        self.mutex.acquire()
         self.command_queue[request.user].append(request)
+        self.mutex.release()
         return openappwrapper_pb2.DebugReply(message='RPC SUC')
 
     def ListenForContent(self, request, context):
-        print('Start Listening for Machine: ' + request.machine_name)
-        # Flush current pool
-        print('--------- FLUSHING ---------')
-        print(self.command_queue[request.machine_name])
-        self.command_queue[request.machine_name].clear()
-        print('--------- DONE ---------')
+        machine_name = request.machine_name
+        if machine_name in self.connection_status and self.connection_status[machine_name]:
+            self.mutex.acquire()
+            logger.warning('Disable original threads.')
+            self.connection_status[machine_name] = False
+            self.mutex.release()
+            time.sleep(0.3)
+        self.connection_status[machine_name] = True
 
-        while True:
+        logger.warning('Start Listening for Machine: ' + request.machine_name)
+        # Flush current pool
+        logger.warning('--------- FLUSHING ---------')
+        logger.warning(request)
+
+        self.mutex.acquire()
+        logger.warning(self.command_queue[request.machine_name])
+        if self.command_queue[request.machine_name]:
+            last_element = self.command_queue[request.machine_name].pop()
+            self.command_queue[request.machine_name].clear()
+            self.command_queue[request.machine_name].append(last_element)
+        logger.warning('--------- DONE ---------')
+        self.mutex.release()
+
+        while True and self.connection_status[machine_name]:
             time.sleep(0.2)
             while self.command_queue[request.machine_name]:
+                self.mutex.acquire()
                 content = self.command_queue[request.machine_name].popleft()
+                self.mutex.release()
+                logger.warning('------ Content Yield ------')
+                logger.warning(content)
                 yield content
+        logger.warning('Exit Listening...')
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=20))
