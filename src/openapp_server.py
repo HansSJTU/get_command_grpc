@@ -103,7 +103,10 @@ class Opener(openappwrapper_pb2_grpc.OpenerServicer):
         logger.warning('Exit Listening...')
 
 def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=20))
+    server = grpc.server(
+        futures.ThreadPoolExecutor(max_workers=20),
+        options= openapp_common.GRPC_OPTIONS
+    )
     openappwrapper_pb2_grpc.add_OpenerServicer_to_server(Opener(), server)
     server.add_insecure_port(openapp_common.SERVER_USED_CHANNEL)
     server.start()

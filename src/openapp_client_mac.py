@@ -46,7 +46,7 @@ def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
     # of the code.
-    with grpc.insecure_channel(openapp_common.CLIENT_USED_CHANNEL) as ch:
+    with grpc.insecure_channel(openapp_common.CLIENT_USED_CHANNEL, options=openapp_common.GRPC_OPTIONS) as ch:
         stub = openappwrapper_pb2_grpc.OpenerStub(ch)
         result_generator = stub.ListenForContent(openappwrapper_pb2.Id(machine_name=openapp_common.USER))
         def close_ch(signalNumber, frame):
