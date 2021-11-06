@@ -11,7 +11,7 @@ Common global values in openapp module
 """
 
 CLIENT_DEBUG_CHANNEL = 'localhost:50051'
-CLIENT_REAL_CHANNEL = '178.128.209.12:9100'
+CLIENT_REAL_CHANNEL = '157.230.247.247:9100'
 SERVER_DEBUG_CHANNEL = '[::]:50051'
 SERVER_REAL_CHANNEL = '[::]:9100'
 USER = 'hanxiaoh_corp'

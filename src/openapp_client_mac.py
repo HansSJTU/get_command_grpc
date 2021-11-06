@@ -26,6 +26,7 @@ import grpc
 import sys
 import time
 import pyperclip
+import datetime
 
 import openappwrapper_pb2
 import openappwrapper_pb2_grpc
@@ -42,6 +43,20 @@ def run(mode, command):
     print(response.message)
 """
 
+FORMAT = "%(asctime)s-%(levelname)s] %(message)s"
+logging.basicConfig(
+    level=logging.INFO,
+    format=FORMAT,
+    handlers=[
+        logging.FileHandler('error.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+info_ch = logging.StreamHandler(sys.stdout)
+info_ch.setLevel(logging.WARNING)
+info_ch.setFormatter(logging.Formatter(FORMAT))
+logger.addHandler(info_ch)
+
 def run():
     # NOTE(gRPC Python Team): .close() is possible on a channel and should be
     # used in circumstances in which the with statement does not fit the needs
@@ -57,7 +72,7 @@ def run():
         signal.signal(signal.SIGINT, close_ch)
         for command in result_generator:
             if command.mode == 'open':
-                command = "open \"" + command.command + "\""
+                command = "open \"" + command.command.rstrip() + "\""
                 os.system(command)
                 message = '[Done]: ' + command
             elif command.mode == 'copy':
@@ -66,8 +81,19 @@ def run():
             else:
                 message = '[Failed]: ' + command.mode + ' ' + command.command
             message = message.replace('\n', '\ n')
-            logging.warning(message)
+            logger.warning(message)
 
 if __name__ == '__main__':
     logging.basicConfig()
-    run()
+    while True:
+      try:
+        run()
+      except Exception as err:
+        logger.info(f'Can\'t connect to '
+            f'server {openapp_common.CLIENT_USED_CHANNEL}, status: {err.code()}, '
+            f'details: {err.details()}')
+        if 'keepalive watchdog' in err.details():
+            time.sleep(1)
+        else:
+          time.sleep(60)
+        logger.info(f'Start Retrying...')
