@@ -85,6 +85,10 @@ def run():
 
 if __name__ == '__main__':
     logging.basicConfig()
+    logger.warning("Kill and restart caffeinate -d")
+    os.system("ps aux | command grep \"[c]affeinate -d\" | awk '{print $2}' | xargs kill")
+    os.system("caffeinate -d &")
+
     while True:
       try:
         run()
